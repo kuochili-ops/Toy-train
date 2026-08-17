@@ -221,9 +221,12 @@
             buildNaturalMountainAndRibCanopy();
             buildSingleLargeSign();
 
-            trainGroup = new THREE.Group();
+            trainGroup = newStudioProjectsGroup = new THREE.Group();
             scene.add(trainGroup);
-            trainGroup.position.set(TRACK_RADIUS, 0.18, 0);
+            
+            // 【關鍵修改】：將火車初始位置設定在正前方（畫面正中間 X=0, Z=TRACK_RADIUS）
+            trainGroup.position.set(0, 0.18, TRACK_RADIUS);
+            trainGroup.rotation.y = -Math.PI / 2; // 調整車頭面向切線方向
 
             loadTrainModel();
 
@@ -303,7 +306,6 @@
 
             const concreteMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.7, side: THREE.DoubleSide });
 
-            // 1. 中央主山丘（半徑 9.0）
             const mainMountainGeo = new THREE.CylinderGeometry(1.0, 9.0, 7.2, 32, 16);
             const mPos = mainMountainGeo.attributes.position;
             for (let i = 0; i < mPos.count; i++) {
@@ -327,7 +329,6 @@
             mainTop.castShadow = true;
             mountainGroup.add(mainTop);
 
-            // 2. 減少條帶數量，避免外側過於擁擠雜亂
             const ribCount = 24; 
 
             for (let i = 0; i < ribCount; i++) {
@@ -379,7 +380,6 @@
                 }
             }
 
-            // 3. 水泥拱門門框與兩側內側空隙遮蔽（從水泥門側邊往中央山方向排列）
             const portalShape = new THREE.Shape();
             portalShape.moveTo(-2.5, 0);
             portalShape.lineTo(2.5, 0);
@@ -409,14 +409,12 @@
                 portalMesh.position.set(0, 0, -0.25);
                 portalGroup.add(portalMesh);
 
-                // 【內側空隙修正】：從水泥門側邊（±2.6 處）往中央山方向密集排列不同高度的遮蔽材料
                 [-1, 1].forEach(sideMultiplier => {
-                    const numBars = 5; // 5 根密集排列
+                    const numBars = 5;
                     for (let b = 0; b < numBars; b++) {
-                        // 從門側邊往內（向中央山方向延伸）
                         const offsetX = sideMultiplier * (2.6 + b * 0.35);
                         const offsetZ = -0.4 - (b * 0.2);
-                        const barHeight = 4.5 - (b * 0.6); // 越往中央山高度漸減，完美貼合山勢空隙
+                        const barHeight = 4.5 - (b * 0.6);
                         const barWidth = 0.4;
 
                         const sideBarGeo = new THREE.BoxGeometry(barWidth, barHeight, 0.4);
