@@ -160,15 +160,14 @@
     </div>
 
     <script>
-        const TRACK_RADIUS = 12;      
-        const DISC_RADIUS = 16;       
+        const TRACK_RADIUS = 13.0;    // 將軌道整體半徑向外擴展，配合車輪輪距
+        const DISC_RADIUS = 16.5;     
         const ROTATION_SPEED = 0.008; 
 
         let scene, camera, renderer, controls;
         let discGroup, trainGroup;
         let mountainTopMaterial, ribTopMaterial;
         let signTexture, signCanvas, signCtx, signGroup;
-        let rods = [];
 
         let textLines = [];
         let currentLineIndex = 0;
@@ -221,12 +220,10 @@
             buildNaturalMountainAndRibCanopy();
             buildSingleLargeSign();
 
-            trainGroup = newStudioProjectsGroup = new THREE.Group();
+            trainGroup = new THREE.Group();
             scene.add(trainGroup);
-            
-            // 【關鍵修改】：將火車初始位置設定在正前方（畫面正中間 X=0, Z=TRACK_RADIUS）
             trainGroup.position.set(0, 0.18, TRACK_RADIUS);
-            trainGroup.rotation.y = -Math.PI / 2; // 調整車頭面向切線方向
+            trainGroup.rotation.y = -Math.PI / 2;
 
             loadTrainModel();
 
@@ -253,14 +250,15 @@
             disc.receiveShadow = true;
             discGroup.add(disc);
 
-            const bedGeo = new THREE.RingGeometry(TRACK_RADIUS - 0.8, TRACK_RADIUS + 0.8, 64);
+            const bedGeo = new THREE.RingGeometry(TRACK_RADIUS - 1.0, TRACK_RADIUS + 1.0, 64);
             const bedMat = new THREE.MeshStandardMaterial({ color: 0x444444, side: THREE.DoubleSide });
             const bed = new THREE.Mesh(bedGeo, bedMat);
             bed.rotation.x = -Math.PI / 2;
             bed.position.y = 0.01;
             discGroup.add(bed);
 
-            const railGauge = 0.45;
+            // 調整軌距（railGauge 放大至 0.6，使雙軌更寬，精準對應火車輪距）
+            const railGauge = 0.6;
             const railGeoOuter = new THREE.TorusGeometry(TRACK_RADIUS + railGauge, 0.035, 8, 64);
             const railGeoInner = new THREE.TorusGeometry(TRACK_RADIUS - railGauge, 0.035, 8, 64);
             const railMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.2 });
@@ -273,8 +271,8 @@
             railInner.position.y = 0.15;
             discGroup.add(railOuter, railInner);
 
-            const sleeperCount = 80;
-            const sleeperGeo = new THREE.BoxGeometry(1.3, 0.05, 0.18);
+            const sleeperCount = 85;
+            const sleeperGeo = new THREE.BoxGeometry(1.6, 0.05, 0.18);
             const sleeperMat = new THREE.MeshStandardMaterial({ color: 0x3d2514 });
             for (let i = 0; i < sleeperCount; i++) {
                 const angle = (i / sleeperCount) * Math.PI * 2;
@@ -288,8 +286,8 @@
         function buildNaturalMountainAndRibCanopy() {
             const mountainGroup = new THREE.Group();
 
-            const startAngle = Math.PI * 0.76;
-            const endAngle = Math.PI * 1.24;
+            const startAngle = Math.PI * 0.74;
+            const endAngle = Math.PI * 1.26;
 
             const baseMat = new THREE.MeshStandardMaterial({ color: 0x5a3d28, roughness: 0.9, flatShading: true });
             mountainTopMaterial = new THREE.MeshStandardMaterial({
@@ -329,18 +327,18 @@
             mainTop.castShadow = true;
             mountainGroup.add(mainTop);
 
-            const ribCount = 24; 
+            const ribCount = 26; 
 
             for (let i = 0; i < ribCount; i++) {
                 const t = i / (ribCount - 1);
                 const angle = startAngle + t * (endAngle - startAngle);
 
-                const startR = 6.3;
+                const startR = 6.8;
                 const startX = Math.cos(angle) * startR;
                 const startZ = Math.sin(angle) * startR;
                 const startY = 2.2;
 
-                const endR = 15.4;
+                const endR = 16.0;
                 const endX = Math.cos(angle) * endR;
                 const endZ = Math.sin(angle) * endR;
                 const endY = 0.1;
@@ -348,7 +346,7 @@
                 const midR = TRACK_RADIUS;
                 const midX = Math.cos(angle) * midR;
                 const midZ = Math.sin(angle) * midR;
-                const midY = 4.35 + Math.sin(t * Math.PI) * 0.35;
+                const midY = 4.7 + Math.sin(t * Math.PI) * 0.4;
 
                 const curve = new THREE.CatmullRomCurve3([
                     new THREE.Vector3(startX, startY, startZ),
@@ -381,17 +379,17 @@
             }
 
             const portalShape = new THREE.Shape();
-            portalShape.moveTo(-2.5, 0);
-            portalShape.lineTo(2.5, 0);
-            portalShape.lineTo(2.5, 5.6);
-            portalShape.lineTo(-2.5, 5.6);
+            portalShape.moveTo(-3.0, 0);
+            portalShape.lineTo(3.0, 0);
+            portalShape.lineTo(3.0, 6.2);
+            portalShape.lineTo(-3.0, 6.2);
             portalShape.closePath();
 
             const holePath = new THREE.Path();
-            holePath.moveTo(-1.9, 0);
-            holePath.lineTo(-1.9, 2.7);
-            holePath.absarc(0, 2.7, 1.9, Math.PI, 0, true);
-            holePath.lineTo(1.9, 0);
+            holePath.moveTo(-2.3, 0);
+            holePath.lineTo(-2.3, 3.1);
+            holePath.absarc(0, 3.1, 2.3, Math.PI, 0, true);
+            holePath.lineTo(2.3, 0);
             holePath.closePath();
             portalShape.holes.push(holePath);
 
@@ -412,9 +410,9 @@
                 [-1, 1].forEach(sideMultiplier => {
                     const numBars = 5;
                     for (let b = 0; b < numBars; b++) {
-                        const offsetX = sideMultiplier * (2.6 + b * 0.35);
+                        const offsetX = sideMultiplier * (3.1 + b * 0.35);
                         const offsetZ = -0.4 - (b * 0.2);
-                        const barHeight = 4.5 - (b * 0.6);
+                        const barHeight = 4.8 - (b * 0.55);
                         const barWidth = 0.4;
 
                         const sideBarGeo = new THREE.BoxGeometry(barWidth, barHeight, 0.4);
@@ -519,7 +517,7 @@
                     if (loadingEl) loadingEl.style.display = 'none';
                     const trainModel = gltf.scene;
 
-                    trainModel.scale.set(0.85, 0.85, 0.85);
+                    trainModel.scale.set(0.75, 0.75, 0.75);
 
                     const box = new THREE.Box3().setFromObject(trainModel);
                     const center = box.getCenter(new THREE.Vector3());
@@ -530,9 +528,6 @@
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
-                            if (child.name.toLowerCase().includes('rod') || child.name.toLowerCase().includes('wheel')) {
-                                rods.push(child);
-                            }
                         }
                     });
 
@@ -541,43 +536,24 @@
                 null,
                 (err) => {
                     console.log('未讀取到 GLB 模型，開啟備用火車頭');
-                    buildFallbackTrainWithRods();
+                    buildFallbackTrain();
                 }
             );
         }
 
-        function buildFallbackTrainWithRods() {
-            const bodyGeo = new THREE.BoxGeometry(1.3, 1.4, 3.2);
+        function buildFallbackTrain() {
+            const bodyGeo = new THREE.BoxGeometry(1.2, 1.3, 3.0);
             const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0055a5, roughness: 0.3 });
             const body = new THREE.Mesh(bodyGeo, bodyMat);
             body.position.y = 0.95;
             body.castShadow = true;
             trainGroup.add(body);
 
-            const cabGeo = new THREE.BoxGeometry(1.35, 0.8, 1.2);
+            const cabGeo = new THREE.BoxGeometry(1.25, 0.75, 1.1);
             const cabMat = new THREE.MeshStandardMaterial({ color: 0x003366 });
             const cab = new THREE.Mesh(cabGeo, cabMat);
-            cab.position.set(0, 1.5, -0.8);
+            cab.position.set(0, 1.45, -0.8);
             trainGroup.add(cab);
-
-            const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.12, 20);
-            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.5 });
-            const rodMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.9, roughness: 0.1 });
-
-            for (let side of [-0.6, 0.6]) {
-                const rodGeo = new THREE.BoxGeometry(0.05, 0.1, 2.0);
-                const rod = new THREE.Mesh(rodGeo, rodMat);
-                rod.position.set(side, 0.3, 0);
-                trainGroup.add(rod);
-                rods.push(rod);
-
-                for (let z of [-0.9, 0, 0.9]) {
-                    const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-                    wheel.rotation.z = Math.PI / 2;
-                    wheel.position.set(side, 0.3, z);
-                    trainGroup.add(wheel);
-                }
-            }
         }
 
         function changeMountainSeason() {
@@ -630,10 +606,6 @@
             }
 
             const time = Date.now() * 0.01;
-            rods.forEach((rod, idx) => {
-                rod.position.x = (idx % 2 === 0 ? -0.6 : 0.6) + Math.cos(time) * 0.03;
-                rod.position.y = 0.3 + Math.sin(time) * 0.03;
-            });
 
             if (trainGroup) {
                 trainGroup.position.y = 0.18 + Math.sin(time * 2) * 0.008;
